@@ -1,0 +1,7 @@
+dist
+*.tar
+temp
+uploads
+.idea
+node_modules
+.DS_Store
