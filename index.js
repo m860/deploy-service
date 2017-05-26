@@ -16,6 +16,10 @@ let upload = multer({dest: 'uploads/'});
 
 let app = express();
 
+app.get(/(\.apk|\.ipa)$/i,function(req,res){
+	let url=req.originalUrl.replace('ftp','public').substring(1);
+	res.sendfile(url);
+});
 app.use('/ftp', serveIndex('public', {'icons': true}))
 
 function unzip(zipFilePath, callback = ()=>null, extraCallback = ()=>null) {
