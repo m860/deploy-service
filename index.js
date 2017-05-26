@@ -10,10 +10,13 @@ import requireFromString from 'require-from-string'
 import fse from 'fs-extra'
 import shell from 'shelljs'
 import rmdir from 'rmdir'
+import serveIndex from 'serve-index'
 
 let upload = multer({dest: 'uploads/'});
 
 let app = express();
+
+app.use('/ftp', serveIndex('public', {'icons': true}))
 
 function unzip(zipFilePath) {
 	function onError(err) {
@@ -25,7 +28,8 @@ function unzip(zipFilePath) {
 	}
 
 	let tempPath = path.join(__dirname, 'temp');
-	function extra(){
+
+	function extra() {
 		let extractor = tar.Extract({
 			path: tempPath
 		})
@@ -36,12 +40,13 @@ function unzip(zipFilePath) {
 			.on('error', onError)
 			.pipe(extractor);
 	}
+
 	if (fs.existsSync(tempPath)) {
-		rmdir(tempPath,function(){
+		rmdir(tempPath, function () {
 			extra();
 		})
 	}
-	else{
+	else {
 		extra();
 	}
 }
@@ -76,7 +81,7 @@ app.post('/', upload.single('package'), (req, res)=> {
 	//unzip
 	unzip(req.file.path);
 
-	setTimeout(()=>{
+	setTimeout(()=> {
 		let scriptPath = path.join(__dirname, 'temp', 'temp', 'script.js');
 		let scriptText = fs.readFileSync(scriptPath, 'utf8');
 		let script = requireFromString(scriptText);
@@ -84,7 +89,7 @@ app.post('/', upload.single('package'), (req, res)=> {
 			script(copy, shell);
 		}
 		res.end();
-	},2000);
+	}, 2000);
 
 });
 
