@@ -12,6 +12,10 @@ request.post({
 })
 ```
 
+## ftp
+
+    可以访问 http://127.0.0.1:3001/ftp 查看public/
+
 ## tar 文件结构
 
     package.tar
