@@ -18,27 +18,24 @@ let app = express();
 
 app.use('/ftp', serveIndex('public', {'icons': true}))
 
-function unzip(zipFilePath) {
-	function onError(err) {
-		console.error('An error occurred:', err)
-	}
-
-	function onEnd() {
-		console.log('unzip complete')
-	}
-
+function unzip(zipFilePath, callback = ()=>null, extraCallback = ()=>null) {
 	let tempPath = path.join(__dirname, 'temp');
 
 	function extra() {
-		let extractor = tar.Extract({
-			path: tempPath
-		})
-			.on('error', onError)
-			.on('end', onEnd);
-
-		fs.createReadStream(zipFilePath)
-			.on('error', onError)
-			.pipe(extractor);
+		let extractor = tar.Extract({path: tempPath}).on('error', (err)=> {
+			extraCallback(err);
+		}).on('end', ()=> {
+			extraCallback();
+		});
+		let reader = fs.createReadStream(zipFilePath).pipe(extractor);
+		reader.on('error', (err)=> {
+			console.error('an error occurred:', err);
+			callback(err);
+		});
+		reader.on('finish', ()=> {
+			console.log('unzip complete');
+			callback();
+		});
 	}
 
 	if (fs.existsSync(tempPath)) {
@@ -78,21 +75,24 @@ function copy(target) {
 }
 
 app.post('/', upload.single('package'), (req, res)=> {
-	//unzip
-	unzip(req.file.path);
-
-	setTimeout(()=> {
-		let scriptPath = path.join(__dirname, 'temp', 'temp', 'script.js');
-		let scriptText = fs.readFileSync(scriptPath, 'utf8');
-		let script = requireFromString(scriptText);
-		if (script) {
-			script(copy, shell);
+	unzip(req.file.path, (err)=> {
+		if (err) {
+			console.log(err);
+		}
+		else {
+			let scriptPath = path.join(__dirname, 'temp', 'temp', 'script.js');
+			let scriptText = fs.readFileSync(scriptPath, 'utf8');
+			let script = requireFromString(scriptText);
+			if (script) {
+				script(copy, shell);
+			}
 		}
 		res.end();
-	}, 2000);
-
+	});
 });
 
-app.listen(4000, ()=> {
-	console.log('The service is running on 3001');
+var port = 4000;
+
+app.listen(port, ()=> {
+	console.log('The service is running on ' + port);
 })
