@@ -20,7 +20,7 @@ app.get(/(\.apk|\.ipa)$/i,function(req,res){
 	let url=req.originalUrl.replace('ftp','public').substring(1);
 	res.sendfile(url);
 });
-app.use('/ftp', serveIndex('public', {'icons': true}))
+app.use('/ftp', serveIndex('public', {'icons': true,view:"details"}))
 
 function unzip(zipFilePath, callback = ()=>null, extraCallback = ()=>null) {
 	let tempPath = path.join(__dirname, 'temp');
